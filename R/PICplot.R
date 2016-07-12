@@ -1,4 +1,4 @@
-PICplot = function(PICrefine,index)
+PICplot = function(PICs,index)
 {
   PIC <- PICrefine$PICs[[index]]
   rt <- PIC[,1]

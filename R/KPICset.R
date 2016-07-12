@@ -48,31 +48,25 @@ KPICset <- function(files,range=10,level=500,alpha=0.2,Iterate=4000,n=3,refine=N
   return(output)
 }
 
-rtcor <- function(xset,mztol=0.05,pw=20,lambda=1.5){
-  R <- xset@PICset$PICset[[1]]
-  R <- smoothPIC(R,lambda)
-  peaks <- xset@peakmat
-  rt_cor <- round(peaks[,'rt'],2)
-  peaks <- cbind(peaks,rt_cor)
-  for (nsam in 2:length(xset@sample)){
-    X <- xset@PICset$PICset[[nsam]]
-    X <- smoothPIC(X,lambda)
-    Spectrum <- getSpectrum(X,R,mztol=mztol,pw=pw)
-    align.result <- mwfft(Spectrum$x,Spectrum$r,Spectrum$w)
-    x.rt <- x.align <- round(X$rt,2)
-    x.align[x.rt%in%Spectrum$x.rt] <- x.rt[which(x.rt%in%Spectrum$x.rt)+align.result$shifts_refine]
-    rt.raw <- X$Info[,'rt']
-    rt.align <- matrix(rt.raw,length(rt.raw),1)
-    colnames(rt.align) <- 'rt'
-    for (i in 1:length(rt.raw)){
-      rt.align[i,] <- x.align[which(abs(x.rt-rt.raw[i])==min(abs(x.rt-rt.raw[i])))]
-    }
-    X$Info <- cbind(X$Info,rt.align)
-    peaks[which(peaks[,'sample']==nsam),'rt_cor'] <- rt.align
-    xset@PICset$PICset[[nsam]] <- X
-    cat(nsam,'/',length(xset@sample), "is done","\n")
+rtcor <- function(xset,mzSegSize=.5,shift=10,lambda=1.5,ref=NA){
+  lambda <- max(0,lambda)
+  if (is.na(ref)){
+    TICs <- getTIC(path,method='BPC')
+    ref <- TICs$ref
   }
-  xset@PICset$PICset[[1]] <- R
-  xset@peakmat <- peaks
-  return(xset)
+  xset1 <- xset
+  peakmat <- xset1@peakmat
+  shift <- round(shift/(xset1@rt[[1]][2]-xset1@rt[[1]][1]))
+  mzlist1 <- seq((min(xset1@peakmat[,'mz'])-0.5*mzSegSize),
+                (max(xset1@peakmat[,'mz'])+0.5*mzSegSize),mzSegSize)
+  mzlist2 <- mzlist1+0.5*mzSegSize
+  peakmat[,'rt'] <- rt_cor <- round(peakmat[,'rt'],2)
+  peakmat <- cbind(peakmat,rt_cor)
+  xset1@peakmat <- peakmat
+  for (i in 1:(length(mzlist1)-1)){
+    xset1 <- seg.rtcor(xset1,ref,mzlist1[i],mzlist1[i+1],shift=shift,lambda=lambda)
+    xset1 <- seg.rtcor(xset1,ref,mzlist2[i],mzlist2[i+1],shift=shift,lambda=lambda)
+    if (i%%20==0){cat(round(i/(length(mzlist1)-1)*100),'%',' is done','\n')}
+  }
+  return(xset1)
 }

@@ -17,6 +17,40 @@ LoadData = function(fileName)
   return (data)
 }
 
+getTIC <- function(files,method='TIC'){
+  library (mzR)
+  filepattern <- c("[Cc][Dd][Ff]", "[Nn][Cc]", "([Mm][Zz])?[Xx][Mm][Ll]",
+                   "[Mm][Zz][Dd][Aa][Tt][Aa]", "[Mm][Zz][Mm][Ll]")
+  filepattern <- paste(paste("\\.", filepattern, "$", sep = ""), collapse = "|")
+  info <- file.info(files)
+  listed <- list.files(files[info$isdir], pattern = filepattern,
+                       recursive = TRUE, full.names = TRUE)
+  TICs <- list()
+  scans <- 10^6
+  for (sam in 1:length(listed)){
+    rawMs <- openMSfile(listed[sam])
+    MsPeak <- peaks(rawMs)
+    TIC <- rep(0,length(MsPeak))
+    for (i in 1:length(TIC)){
+      if (method=='TIC'){TIC[i] <- sum(MsPeak[[i]][,2])}
+      if (method=='BPC'){TIC[i] <- max(MsPeak[[i]][,2])}
+    }
+    TICs <- c(TICs,list(TIC))
+    corrs <- matrix(0,length(TICs),length(TICs))
+    corrs1 <- rep(0,length(TICs))
+    for (i in 1:length(TICs)){
+      for (j in 1:length(TICs)){
+        temp <- min(length(TICs[[i]]),length(TICs[[j]]))
+        corrs[i,j] <- cor(TICs[[i]][1:temp],TICs[[j]][1:temp])
+        scans <- min(scans,temp)
+      }
+      corrs1[i] <- mean(corrs[i,])
+    }
+  }
+  ref <- which(corrs1==max(corrs1))
+  return(list(TICs=TICs,ref=ref,mscan=scans))
+}
+
 subPIC = function(mat,range,level,alpha=0.3,Iterate=4000,tInl,gap)
 {
   library(Ckmeans.1d.dp)

@@ -16,10 +16,14 @@ get.sharpness = function(sig){
   p <- which(sig[2:(length(sig)-1)]==max(sig[2:(length(sig)-1)]))+1
   sharpness <- 0
   for (i in 2:p){
-    sharpness <- sharpness+((sig[i]-sig[i-1]))/sig[i-1]
+    if (sig[i-1]>0.1){temp <- ((sig[i]-sig[i-1]))/sig[i-1]
+    }else{temp <- 0}
+    sharpness <- sharpness+temp
   }
   for (j in p:length(sig)-1){
-    sharpness <- sharpness+((sig[i]-sig[i+1])/sig[i+1])
+    if (sig[i+1]>0.1){temp <- ((sig[i]-sig[i+1])/sig[i+1])
+    }else{temp <- 0}
+    sharpness <- sharpness+temp
   }
   return(sharpness)
 }
@@ -112,7 +116,8 @@ PICrefine = function(PICs,n=1)
   library(doParallel)
   library(foreach)
   subfun <- subfun
-  
+  cwtft <- cwtft
+
   output <- list()
   tInl <- PICs$rt[2]-PICs$rt[1]
 
@@ -134,11 +139,13 @@ PICrefine = function(PICs,n=1)
   refine <- which(scores[,4]<mean(scores[,4])-n*var(scores[,4]))
   PIClist <- PICs$PICs
   PIClist[refine] <-NULL
-  pInfo <- cbind(PICs$Info,scores[,4])[-refine,]
+  ind <- setdiff(1:nrow(scores),refine)
+  pInfo <- cbind(PICs$Info,scores[,4])[ind,]
   colnames(pInfo) <- c("mz","mzmin","mzmax","rt","rtmin","rtmax","Intensity","score")
 
   output$PICs <- PIClist
   output$Info <- pInfo
-  output$scores <- scores[-refine,]
+  output$scores <- scores[ind,]
+  output$rt <- PICs$rt
   return (output)
 }
