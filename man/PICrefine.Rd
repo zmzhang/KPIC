@@ -1,7 +1,7 @@
 \name{PICrefine}
 \alias{PICrefine}
 \title{
-Refine the PICs
+Refine the PICs.
 }
 \description{
 Remove unsatisfactory PICs by calculating the Gaussian similarity, sharpness and SNR

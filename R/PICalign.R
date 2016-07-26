@@ -20,10 +20,10 @@ getSpectrum <- function(xset,mz1,mz2,lambda){
     y <- spectra[i,]
     M <- length(y)
     E <- sparseMatrix(i=1:M,j=1:M,x=1)
-    D <- diff(E)
-    C <- chol(E+lambda*t(D)%*%D)
+    D <- Matrix::diff(E)
+    C <- chol(E+lambda*Matrix::t(D)%*%D)
     z <- solve(C,solve(t(C),y))
-    spectra[i,] <- t(as.matrix(z))
+    spectra[i,] <- as.numeric(z)
   }
   segSize <- max(20,round(2*segSize))
   return(list(spectra=spectra,segSize=segSize))

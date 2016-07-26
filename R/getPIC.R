@@ -48,7 +48,7 @@ getTIC <- function(files,method='TIC'){
     }
   }
   ref <- which(corrs1==max(corrs1))
-  return(list(TICs=TICs,ref=ref,mscan=scans))
+  return(list(TICs=TICs,ref=ref))
 }
 
 subPIC = function(mat,range,level,alpha=0.3,Iterate=4000,tInl,gap)
@@ -141,7 +141,6 @@ getPIC = function(filename,range,level,alpha=0.3,Iterate=4000,n=3)
   library(stats)
   library(parallel)
   library(foreach)
-  subPIC <- subPIC
   
   options(warn = -1)
   
@@ -175,7 +174,7 @@ getPIC = function(filename,range,level,alpha=0.3,Iterate=4000,n=3)
   }
   
   PIC <-foreach(i=1:length(datalist)) %dopar%
-    subPIC(datalist[[i]],range=range,level=level,alpha=alpha,Iterate=Iterate,tInl=tInl,gap=gap)
+    KPIC::subPIC(datalist[[i]],range=range,level=level,alpha=alpha,Iterate=Iterate,tInl=tInl,gap=gap)
   stopCluster(cl)
   PIClist <- PIC[[1]]$PICs
   Infolist <- PIC[[1]]$Info

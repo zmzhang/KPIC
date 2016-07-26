@@ -101,6 +101,7 @@ subfun = function(x,PICs,tInl)
   if(is.numeric(r.square)==F){r.square<-0.0}
   sharpness <- get.sharpness(inte1)
   SNR <- siglevel/noise
+  if(is.nan(SNR)==T){SNR<-0}
   
   peakInfo <- list()
   peakInfo$r.square <- 1.5*r.square
@@ -112,11 +113,10 @@ subfun = function(x,PICs,tInl)
 
 PICrefine = function(PICs,n=1)
 {
+  library(KPIC)
   library(parallel)
   library(doParallel)
   library(foreach)
-  subfun <- subfun
-  cwtft <- cwtft
 
   output <- list()
   tInl <- PICs$rt[2]-PICs$rt[1]
@@ -124,7 +124,7 @@ PICrefine = function(PICs,n=1)
   cl <- makeCluster(getOption("cl.cores", detectCores(logical = F)))
   registerDoParallel(cl)
   peakInfo <- foreach(x=1:length(PICs$PICs)) %dopar%
-    subfun(x,PICs,tInl)
+    KPIC::subfun(x,PICs,tInl)
   stopCluster(cl)
   scores <- matrix(0,length(peakInfo),4)
   for(jj in 1:length(peakInfo)){

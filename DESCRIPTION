@@ -1,0 +1,11 @@
+Package: KPIC
+Type: Package
+Title: KPIC
+Version: 0.3.2
+Date: 2016-06-05
+Author: Hongchao Ji
+Maintainer: Hongchao Ji <ji.hongchao@foxmail.com>
+Depends: Rcpp, stats, parallel, Ckmeans.1d.dp, mzR, foreach, doParallel, iterators
+Imports: Rcpp (>= 0.11.3), mzR (>= 2.0.0), stats (>= 3.0.2), parallel (>= 3.0.2), Ckmeans.1d.dp (>= 3.3.1), doParallel (>= 1.0.10), iterators(>= 1.0.8), foreach (>= 1.4.3), Matrix (>= 1.2-6)
+Description: LC-MS data preprocessing for high-throughput, untargeted analyte profiling.
+License: GPL (>= 2)

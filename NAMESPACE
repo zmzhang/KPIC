@@ -1,1 +1,28 @@
-exportPattern("^[[:alpha:]]+")
+import("Matrix")
+import("mzR")
+import("Ckmeans.1d.dp")
+
+importFrom("graphics", "plot")
+importFrom("stats", "approx", "cor", "density", "fft", "median","mvfft", "nls", "predict", "quantile", "sd", "var")
+			 
+exportPattern(
+	"LoadData",
+	"getTIC",
+	"subPIC",
+	"getPIC",
+	"KPICset",
+	"rtcor",
+	"getSpectrum",
+	"seg.rtcor",
+	"PAFFT",
+	"FFTcorr",
+	"move",
+	"findMin",
+	"PICplot",
+	"gaussfit",
+	"get.sharpness",
+	"waveft",
+	"cwtft",
+	"subfun",
+	"PICrefine"
+)

@@ -1,5 +1,5 @@
-setClass("KPICSet", representation(peakmat="matrix",rt="list",sample="vector",PICset="list"))
-         
+setClass("KPICSet", representation(peakmat="matrix",rt="list",sample="vector",n_features="numeric",PICset="list"))
+
 KPICset <- function(files,range=10,level=500,alpha=0.2,Iterate=4000,n=3,refine=NA){
   library(parallel)
   library(iterators)
@@ -24,11 +24,13 @@ KPICset <- function(files,range=10,level=500,alpha=0.2,Iterate=4000,n=3,refine=N
   if (is.na(refine)==F){
     result <- PICrefine(result,refine)
   }
+  n_features <- rep(0,length(sample))
   peakmat <- matrix(1,nrow(result$Info),1)
   colnames(peakmat) <- "sample"
   peakmat <- cbind(result$Info,peakmat)
-  output@PICset$PICset[[1]] <- result
+  output@PICset <- list(result)
   output@rt[[1]] <- result$rt
+  n_features[1] <- nrow(peakmat)
   cat(1,'/',length(files), "is done","\n")
   for (i in 2:length(files)){
     result <- getPIC(files[i],range=range,level=level,alpha=alpha,Iterate=Iterate,n=n)
@@ -39,34 +41,35 @@ KPICset <- function(files,range=10,level=500,alpha=0.2,Iterate=4000,n=3,refine=N
     colnames(peakmat1) <- "sample"
     peakmat1 <- cbind(result$Info,peakmat1)
     peakmat <- rbind(peakmat,peakmat1)
-    output@PICset$PICset[[i]] <- result
+    output@PICset <- c(output@PICset,list(result))
     output@rt[[i]] <- result$rt
+    n_features[i] <- nrow(peakmat1)
     cat(i,'/',length(files), "is done","\n")
   }
   output@peakmat <- peakmat
   output@sample <- sample
+  output@n_features <- n_features
   return(output)
 }
 
-rtcor <- function(xset,mzSegSize=.5,shift=10,lambda=1.5,ref=NA){
+rtcor <- function(xset,files,mzSegSize=.5,shift=10,lambda=1.5,ref=NA){
   lambda <- max(0,lambda)
   if (is.na(ref)){
-    TICs <- getTIC(path,method='BPC')
+    TICs <- getTIC(files,method='BPC')
     ref <- TICs$ref
   }
-  xset1 <- xset
-  peakmat <- xset1@peakmat
-  shift <- round(shift/(xset1@rt[[1]][2]-xset1@rt[[1]][1]))
-  mzlist1 <- seq((min(xset1@peakmat[,'mz'])-0.5*mzSegSize),
-                (max(xset1@peakmat[,'mz'])+0.5*mzSegSize),mzSegSize)
+  peakmat <- xset@peakmat
+  shift <- round(shift/(xset@rt[[1]][2]-xset@rt[[1]][1]))
+  mzlist1 <- seq((min(xset@peakmat[,'mz'])-0.5*mzSegSize),
+                (max(xset@peakmat[,'mz'])+0.5*mzSegSize),mzSegSize)
   mzlist2 <- mzlist1+0.5*mzSegSize
   peakmat[,'rt'] <- rt_cor <- round(peakmat[,'rt'],2)
   peakmat <- cbind(peakmat,rt_cor)
-  xset1@peakmat <- peakmat
+  xset@peakmat <- peakmat
   for (i in 1:(length(mzlist1)-1)){
-    xset1 <- seg.rtcor(xset1,ref,mzlist1[i],mzlist1[i+1],shift=shift,lambda=lambda)
-    xset1 <- seg.rtcor(xset1,ref,mzlist2[i],mzlist2[i+1],shift=shift,lambda=lambda)
+    xset <- seg.rtcor(xset,ref,mzlist1[i],mzlist1[i+1],shift=shift,lambda=lambda)
+    xset <- seg.rtcor(xset,ref,mzlist2[i],mzlist2[i+1],shift=shift,lambda=lambda)
     if (i%%20==0){cat(round(i/(length(mzlist1)-1)*100),'%',' is done','\n')}
   }
-  return(xset1)
+  return(xset)
 }
